@@ -1,0 +1,667 @@
+/* ============================================
+   ALERT-LoRa Dashboard Stylesheet
+   Dark industrial tech theme
+   CINEC Campus — BSc ETE Project 2026
+   ============================================ */
+
+/* ============================================
+   GOOGLE FONTS IMPORT
+   ============================================ */
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap');
+
+/* ============================================
+   GLOBAL RESET
+   Remove default browser styles
+   ============================================ */
+* {
+    box-sizing : border-box;
+    margin     : 0;
+    padding    : 0;
+}
+
+/* ============================================
+   BODY — MAIN BACKGROUND
+   Background image with dark overlay
+   Circuit board grid pattern on top
+   ============================================ */
+body {
+    font-family           : 'Exo 2', sans-serif;
+    background-color      : #0a0e1a;
+    background-image      : url('/static/images/bg.jpg');
+    background-size       : cover;
+    background-position   : center center;
+    background-attachment : fixed;
+    background-repeat     : no-repeat;
+    color                 : #c8d8f0;
+    min-height            : 100vh;
+    overflow-x            : hidden;
+}
+
+/* Dark overlay on background image */
+body::before {
+    content        : '';
+    position       : fixed;
+    inset          : 0;
+    background     : rgba(5, 10, 25, 0.82);
+    pointer-events : none;
+    z-index        : 0;
+}
+
+/* Circuit board grid pattern */
+body::after {
+    content    : '';
+    position   : fixed;
+    inset      : 0;
+    background :
+        linear-gradient(
+            rgba(0, 180, 255, 0.04) 1px,
+            transparent 1px),
+        linear-gradient(
+            90deg,
+            rgba(0, 180, 255, 0.04) 1px,
+            transparent 1px);
+    background-size    : 40px 40px;
+    pointer-events     : none;
+    z-index            : 0;
+}
+
+/* ============================================
+   MAIN CONTAINER
+   Centers content with max width
+   ============================================ */
+.container {
+    position   : relative;
+    z-index    : 1;
+    padding    : 16px;
+    max-width  : 1600px;
+    margin     : 0 auto;
+}
+
+/* ============================================
+   HEADER SECTION
+   Top navigation bar with logo and clock
+   ============================================ */
+.header {
+    display         : flex;
+    align-items     : center;
+    justify-content : space-between;
+    padding         : 14px 20px;
+    background      : rgba(8, 15, 40, 0.90);
+    border          : 0.5px solid rgba(0, 180, 255, 0.25);
+    border-radius   : 10px;
+    margin-bottom   : 14px;
+    backdrop-filter : blur(6px);
+}
+
+.header-left {
+    display     : flex;
+    align-items : center;
+    gap         : 14px;
+}
+
+.header-right {
+    display     : flex;
+    align-items : center;
+    gap         : 16px;
+}
+
+/* Animated LoRa logo ring */
+.logo-ring {
+    width           : 44px;
+    height          : 44px;
+    border-radius   : 50%;
+    border          : 2px solid #00b4ff;
+    display         : flex;
+    align-items     : center;
+    justify-content : center;
+    font-family     : 'Share Tech Mono', monospace;
+    font-size       : 10px;
+    color           : #00b4ff;
+    letter-spacing  : 1px;
+    animation       : pulse-ring 3s ease-in-out infinite;
+    flex-shrink     : 0;
+}
+
+/* Pulse animation for logo ring */
+@keyframes pulse-ring {
+    0%, 100% {
+        box-shadow : 0 0 0 0 rgba(0, 180, 255, 0.5);
+    }
+    50% {
+        box-shadow : 0 0 0 8px rgba(0, 180, 255, 0);
+    }
+}
+
+.header-title {
+    font-size      : 18px;
+    font-weight    : 600;
+    color          : #e8f4ff;
+    letter-spacing : 0.5px;
+}
+
+.header-sub {
+    font-size  : 11px;
+    color      : #6a8aaa;
+    margin-top : 3px;
+}
+
+/* Live digital clock */
+.clock {
+    font-family    : 'Share Tech Mono', monospace;
+    font-size      : 14px;
+    color          : #00b4ff;
+    letter-spacing : 2px;
+}
+
+/* CINEC campus badge */
+.cinec-badge {
+    font-size      : 10px;
+    padding        : 5px 12px;
+    border         : 0.5px solid rgba(0, 180, 255, 0.3);
+    border-radius  : 20px;
+    color          : #6a9abf;
+    letter-spacing : 0.8px;
+}
+
+/* ============================================
+   STATUS BAR
+   System connection status indicators
+   ============================================ */
+.status-bar {
+    display       : flex;
+    gap           : 10px;
+    margin-bottom : 14px;
+    flex-wrap     : wrap;
+}
+
+.status-pill {
+    display       : flex;
+    align-items   : center;
+    gap           : 7px;
+    padding       : 6px 14px;
+    background    : rgba(8, 15, 40, 0.75);
+    border        : 0.5px solid rgba(0, 180, 255, 0.15);
+    border-radius : 20px;
+    font-size     : 12px;
+    color         : #8aaac8;
+}
+
+/* Blinking status indicator dot */
+.dot {
+    width         : 7px;
+    height        : 7px;
+    border-radius : 50%;
+    flex-shrink   : 0;
+    animation     : blink 2s ease-in-out infinite;
+}
+
+.dot.green { background : #00e676; }
+.dot.blue  { background : #00b4ff; }
+.dot.amber { background : #ffc107; }
+.dot.red   { background : #ff5252; }
+
+/* Blink animation */
+@keyframes blink {
+    0%, 100% { opacity : 1.0; }
+    50%      { opacity : 0.3; }
+}
+
+/* ============================================
+   GRID LAYOUT SYSTEM
+   Responsive grid containers
+   ============================================ */
+.grid-2 {
+    display               : grid;
+    grid-template-columns : 1fr 1fr;
+    gap                   : 12px;
+    margin-bottom         : 12px;
+}
+
+.grid-3 {
+    display               : grid;
+    grid-template-columns : 1fr 1fr 1fr;
+    gap                   : 12px;
+    margin-bottom         : 12px;
+}
+
+.grid-4 {
+    display               : grid;
+    grid-template-columns : repeat(4, 1fr);
+    gap                   : 10px;
+    margin-bottom         : 0;
+}
+
+/* ============================================
+   PANEL CARD
+   Base card style for all dashboard sections
+   ============================================ */
+.panel {
+    background      : rgba(6, 12, 35, 0.85);
+    border          : 0.5px solid rgba(0, 180, 255, 0.18);
+    border-radius   : 10px;
+    padding         : 14px 16px;
+    backdrop-filter : blur(3px);
+    transition      : border-color 0.3s ease;
+}
+
+.panel:hover {
+    border-color : rgba(0, 180, 255, 0.40);
+}
+
+/* Panel section title with blue accent bar */
+.panel-title {
+    font-size      : 10px;
+    text-transform : uppercase;
+    letter-spacing : 1.8px;
+    color          : #00b4ff;
+    margin-bottom  : 12px;
+    display        : flex;
+    align-items    : center;
+    gap            : 8px;
+}
+
+/* Blue accent bar before each title */
+.panel-title::before {
+    content       : '';
+    width         : 3px;
+    height        : 12px;
+    background    : #00b4ff;
+    border-radius : 2px;
+    display       : inline-block;
+    flex-shrink   : 0;
+}
+
+/* ============================================
+   NODE SENSOR CARDS
+   Individual node data display
+   ============================================ */
+.node-card {
+    background      : rgba(6, 12, 35, 0.85);
+    border          : 0.5px solid rgba(0, 180, 255, 0.22);
+    border-radius   : 10px;
+    padding         : 14px 16px;
+    backdrop-filter : blur(3px);
+    transition      : border-color 0.3s ease;
+}
+
+.node-card:hover {
+    border-color : rgba(0, 180, 255, 0.42);
+}
+
+/* Node header row with ID and mode badge */
+.node-header {
+    display         : flex;
+    align-items     : center;
+    justify-content : space-between;
+    margin-bottom   : 12px;
+}
+
+/* Node ID monospace display */
+.node-id {
+    font-family    : 'Share Tech Mono', monospace;
+    font-size      : 16px;
+    color          : #00b4ff;
+    font-weight    : 600;
+    letter-spacing : 1px;
+}
+
+/* FAST mode badge — green */
+.mode-fast {
+    padding        : 4px 12px;
+    border-radius  : 12px;
+    font-size      : 10px;
+    font-weight    : 600;
+    letter-spacing : 1.5px;
+    background     : rgba(0, 230, 118, 0.12);
+    color          : #00e676;
+    border         : 0.5px solid rgba(0, 230, 118, 0.35);
+    transition     : all 0.3s ease;
+}
+
+/* SAFE mode badge — amber */
+.mode-safe {
+    padding        : 4px 12px;
+    border-radius  : 12px;
+    font-size      : 10px;
+    font-weight    : 600;
+    letter-spacing : 1.5px;
+    background     : rgba(255, 193, 7, 0.12);
+    color          : #ffc107;
+    border         : 0.5px solid rgba(255, 193, 7, 0.35);
+    transition     : all 0.3s ease;
+}
+
+/* Sensor readings 2x2 grid */
+.sensor-grid {
+    display               : grid;
+    grid-template-columns : 1fr 1fr;
+    gap                   : 8px;
+}
+
+/* Individual sensor reading box */
+.sensor-item {
+    background    : rgba(0, 15, 50, 0.55);
+    border        : 0.5px solid rgba(0, 180, 255, 0.12);
+    border-radius : 7px;
+    padding       : 9px 11px;
+    transition    : border-color 0.2s;
+}
+
+.sensor-item:hover {
+    border-color : rgba(0, 180, 255, 0.25);
+}
+
+/* Sensor parameter label */
+.sensor-label {
+    font-size      : 9px;
+    color          : #3a5a7a;
+    text-transform : uppercase;
+    letter-spacing : 1.2px;
+    margin-bottom  : 3px;
+}
+
+/* Sensor value — monospace for numbers */
+.sensor-value {
+    font-family : 'Share Tech Mono', monospace;
+    font-size   : 17px;
+    color       : #c8d8f0;
+    line-height : 1.2;
+}
+
+/* Unit label after value */
+.sensor-unit {
+    font-size   : 10px;
+    color       : #3a5a7a;
+    margin-left : 2px;
+}
+
+/* ============================================
+   LQI SCORE DISPLAY
+   Large number showing link quality index
+   ============================================ */
+.lqi-big {
+    text-align : center;
+    padding    : 8px 0 10px;
+}
+
+/* Large LQI number */
+.lqi-number {
+    font-family : 'Share Tech Mono', monospace;
+    font-size   : 46px;
+    font-weight : 400;
+    line-height : 1;
+    transition  : color 0.5s ease;
+}
+
+.lqi-label {
+    font-size      : 10px;
+    color          : #3a5a7a;
+    text-transform : uppercase;
+    letter-spacing : 1.2px;
+    margin-top     : 5px;
+}
+
+/* LQI color states */
+.lqi-good { color : #00e676; }   /* Green — good  */
+.lqi-ok   { color : #ffc107; }   /* Amber — fair  */
+.lqi-bad  { color : #ff5252; }   /* Red   — poor  */
+
+/* ============================================
+   TREND AND PREDICTION ROW
+   ============================================ */
+.trend-row {
+    display         : flex;
+    justify-content : center;
+    gap             : 24px;
+    margin-top      : 10px;
+}
+
+.trend-item {
+    text-align : center;
+}
+
+.trend-item-label {
+    font-size      : 9px;
+    color          : #3a5a7a;
+    text-transform : uppercase;
+    letter-spacing : 1px;
+    margin-bottom  : 3px;
+}
+
+/* Trend direction arrows */
+.trend-up   {
+    color     : #00e676;
+    font-size : 22px;
+}
+.trend-down {
+    color     : #ff5252;
+    font-size : 22px;
+}
+.trend-flat {
+    color     : #ffc107;
+    font-size : 22px;
+}
+
+/* Predicted value text */
+.predicted-value {
+    font-family : 'Share Tech Mono', monospace;
+    font-size   : 16px;
+    color       : #8aaac8;
+    margin-top  : 4px;
+}
+
+/* ============================================
+   7 FACTOR BREAKDOWN BARS
+   Visual progress bars for each factor
+   ============================================ */
+.factor-row {
+    display       : flex;
+    align-items   : center;
+    gap           : 8px;
+    margin-bottom : 8px;
+}
+
+/* Factor name label */
+.factor-name {
+    font-size      : 10px;
+    color          : #5a7a9a;
+    width          : 72px;
+    text-transform : uppercase;
+    letter-spacing : 0.5px;
+    flex-shrink    : 0;
+}
+
+/* Background track for progress bar */
+.factor-bar-bg {
+    flex          : 1;
+    height        : 5px;
+    background    : rgba(0, 180, 255, 0.08);
+    border-radius : 3px;
+    overflow      : hidden;
+}
+
+/* Filled portion of progress bar */
+.factor-bar-fill {
+    height        : 100%;
+    border-radius : 3px;
+    background    : linear-gradient(
+                        90deg, #0040aa, #00b4ff);
+    transition    : width 0.8s ease;
+}
+
+/* Factor value number */
+.factor-val {
+    font-family : 'Share Tech Mono', monospace;
+    font-size   : 10px;
+    color       : #7a9ab8;
+    width       : 30px;
+    text-align  : right;
+    flex-shrink : 0;
+}
+
+/* ============================================
+   PACKET STATISTICS CARDS
+   Summary counters for packet data
+   ============================================ */
+.stat-card {
+    background    : rgba(0, 15, 50, 0.55);
+    border        : 0.5px solid rgba(0, 180, 255, 0.12);
+    border-radius : 8px;
+    padding       : 12px 14px;
+    text-align    : center;
+    transition    : border-color 0.2s;
+}
+
+.stat-card:hover {
+    border-color : rgba(0, 180, 255, 0.28);
+}
+
+/* Large statistic number */
+.stat-number {
+    font-family   : 'Share Tech Mono', monospace;
+    font-size     : 26px;
+    color         : #c8d8f0;
+    margin-bottom : 4px;
+    transition    : color 0.3s;
+}
+
+/* Statistic label */
+.stat-label {
+    font-size      : 9px;
+    color          : #3a5a7a;
+    text-transform : uppercase;
+    letter-spacing : 1.2px;
+}
+
+/* ============================================
+   SYSTEM ALERT ITEMS
+   Color-coded alert notifications
+   ============================================ */
+.alert-item {
+    display       : flex;
+    align-items   : center;
+    gap           : 10px;
+    padding       : 8px 12px;
+    border-radius : 6px;
+    margin-bottom : 6px;
+    font-size     : 12px;
+    line-height   : 1.4;
+}
+
+/* Alert color variants */
+.alert-ok {
+    background : rgba(0, 230, 118, 0.07);
+    border     : 0.5px solid rgba(0, 230, 118, 0.22);
+    color      : #90c890;
+}
+
+.alert-warn {
+    background : rgba(255, 193, 7, 0.07);
+    border     : 0.5px solid rgba(255, 193, 7, 0.22);
+    color      : #c8b060;
+}
+
+.alert-error {
+    background : rgba(255, 82, 82, 0.07);
+    border     : 0.5px solid rgba(255, 82, 82, 0.22);
+    color      : #c87070;
+}
+
+/* ============================================
+   DATA LOG TABLE
+   Scrollable telemetry history table
+   ============================================ */
+.log-table {
+    width           : 100%;
+    border-collapse : collapse;
+    font-size       : 11px;
+}
+
+/* Table header row */
+.log-table th {
+    text-align     : left;
+    padding        : 7px 8px;
+    font-size      : 9px;
+    text-transform : uppercase;
+    letter-spacing : 1.2px;
+    color          : #00b4ff;
+    border-bottom  : 0.5px solid rgba(0, 180, 255, 0.22);
+}
+
+/* Table data cells */
+.log-table td {
+    padding       : 6px 8px;
+    border-bottom : 0.5px solid rgba(0, 180, 255, 0.06);
+    color         : #7a9ab8;
+    font-family   : 'Share Tech Mono', monospace;
+}
+
+/* Row hover effect */
+.log-table tr:hover td {
+    background : rgba(0, 180, 255, 0.04);
+    color      : #a0bcd8;
+}
+
+/* Mode tags inside table */
+.tag-fast {
+    color          : #00e676;
+    font-size      : 9px;
+    letter-spacing : 1px;
+}
+
+.tag-safe {
+    color          : #ffc107;
+    font-size      : 9px;
+    letter-spacing : 1px;
+}
+
+/* ============================================
+   CHART WRAPPER CONTAINERS
+   Fixed height containers for Chart.js
+   ============================================ */
+.chart-wrap {
+    position : relative;
+    width    : 100%;
+    height   : 185px;
+}
+
+.chart-wrap-sm {
+    position : relative;
+    width    : 100%;
+    height   : 155px;
+}
+
+/* ============================================
+   FOOTER
+   Project information at bottom of page
+   ============================================ */
+.footer {
+    text-align     : center;
+    padding        : 14px;
+    margin-top     : 14px;
+    font-size      : 10px;
+    color          : #2a4060;
+    border-top     : 0.5px solid rgba(0, 180, 255, 0.1);
+    letter-spacing : 1px;
+}
+
+/* ============================================
+   SCROLLBAR STYLING
+   Custom dark scrollbar for browsers
+   ============================================ */
+::-webkit-scrollbar {
+    width : 6px;
+}
+
+::-webkit-scrollbar-track {
+    background : rgba(0, 10, 30, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+    background    : rgba(0, 180, 255, 0.3);
+    border-radius : 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background : rgba(0, 180, 255, 0.5);
+}
