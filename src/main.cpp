@@ -1,7 +1,6 @@
 // ============================================
-// ALERT-LoRa Sensor Node – FULL VERSION
-// No Gateway Required (Simulated Link)
-// 7-Factor LQI + Predictive Mode Switching
+// ALERT-LoRa Sensor Node – FINAL VERSION
+// Timestamp: HH:MM:SS | Full Sensors + LQI + Adaptive Mode
 // CINEC Campus — BSc ETE 2026
 // ============================================
 
@@ -15,7 +14,7 @@
 #include "lora_module.h"
 #include "crc16.h"
 
-// Global variables
+// Globals
 String  txMode        = "FAST";
 int     txInterval    = TX_INTERVAL_FAST;
 float   lqiHistory[LQI_HISTORY_SIZE];
@@ -39,9 +38,7 @@ float calculateLQI(int rssi, float snr, float pdr, float packetLoss,
 }
 
 void storeLQI(float lqi) {
-    for (int i = LQI_HISTORY_SIZE - 1; i > 0; i--) {
-        lqiHistory[i] = lqiHistory[i - 1];
-    }
+    for (int i = LQI_HISTORY_SIZE - 1; i > 0; i--) lqiHistory[i] = lqiHistory[i-1];
     lqiHistory[0] = lqi;
     if (lqiCount < LQI_HISTORY_SIZE) lqiCount++;
 }
@@ -55,25 +52,22 @@ String predictTrend() {
 }
 
 String decideMode(float lqi, String trend) {
-    if (lqi >= 75.0 && trend != "degrading") {
-        return "FAST";
-    } else if (lqi < 50.0 || trend == "degrading") {
-        return "SAFE";
-    } else {
-        return "FAST";
-    }
+    if (trend == "degrading" && lqi < LQI_FAST_THRESHOLD) return "SAFE";
+    if (trend == "improving" && lqi > LQI_SAFE_THRESHOLD) return "FAST";
+    return txMode;
 }
 
-void printLQIDetails(int rssi, float snr, float pdr, float packetLoss,
-                     int packetSize, float crcScore, float lqi, String trend) {
-    Serial.print("RSSI: "); Serial.print(rssi); Serial.println(" dBm");
-    Serial.print("SNR: "); Serial.print(snr); Serial.println(" dB");
-    Serial.print("PDR: "); Serial.print(pdr); Serial.println("%");
-    Serial.print("Packet Loss: "); Serial.print(packetLoss); Serial.println("%");
-    Serial.print("Packet Size: "); Serial.print(packetSize); Serial.println(" bytes");
-    Serial.print("CRC Score: "); Serial.print(crcScore); Serial.println("%");
-    Serial.print("LQI Score: "); Serial.print(lqi); Serial.println();
-    Serial.print("Trend: "); Serial.println(trend);
+void printLQIDetails(int rssi, float snr, float pdr, float loss, int size, float crc, float lqi, String trend) {
+    Serial.println("=== 7-FACTOR LQI ===");
+    Serial.print("RSSI: "); Serial.println(rssi);
+    Serial.print("SNR:  "); Serial.println(snr,1);
+    Serial.print("PDR:  "); Serial.println(pdr,1);
+    Serial.print("Loss: "); Serial.println(loss,1);
+    Serial.print("Size: "); Serial.println(size);
+    Serial.print("CRC:  "); Serial.println(crc,1);
+    Serial.print("Intv: "); Serial.println(txInterval);
+    Serial.print("LQI:  "); Serial.println(lqi,2);
+    Serial.print("Trend:"); Serial.println(trend);
 }
 
 void setup() {
@@ -103,98 +97,53 @@ void setup() {
     }
 
     setGreenLED(true);
-    Serial.println("\n==========================================");
-    Serial.println("ALL COMPONENTS INITIALIZED SUCCESSFULLY ✅");
-    Serial.println("Starting Full Sensor Node Telemetry...");
-    Serial.println("==========================================\n");
+    Serial.println("ALL COMPONENTS READY ✅");
+    Serial.println("Packet Format: NODE,TIME,TEMP,HUM,CUR,VIB,MODE,COUNT,CRC");
     delay(1500);
 }
 
 void loop() {
     packetCount++;
 
-    Serial.println("\n==========================================");
-    Serial.print("CYCLE #"); Serial.print(packetCount);
-    Serial.print("  |  Mode: "); Serial.print(txMode);
-    Serial.print("  |  Interval: "); Serial.print(txInterval / 1000); Serial.println("s");
-    Serial.println("==========================================");
+    Serial.println("\n=== CYCLE #" + String(packetCount) + " | Mode: " + txMode + " | Interval: " + String(txInterval/1000) + "s ===");
 
-    // Step 1: Read Sensors
-    Serial.println("--- Step 1: Reading All Sensors ---");
     DHT22Data   dhtData = readDHT22();
     MPU6050Data mpuData = readMPU6050();
     ACS712Data  acsData = readACS712();
 
-    // Step 2: Send Telemetry Packet
-    Serial.println("--- Step 2: Building & Sending Telemetry Packet ---");
     blinkBlueLED();
-    bool sent = sendTelemetryPacket(
-        dhtData.temperature, dhtData.humidity,
-        acsData.current, mpuData.vibration,
-        txMode, packetCount);
+    bool sent = sendTelemetryPacket(dhtData.temperature, dhtData.humidity,
+                                    acsData.current, mpuData.vibration, txMode, packetCount);
 
-    // Step 3: Simulated Link Quality (No Gateway Yet)
-    Serial.println("--- Step 3: Simulated Link Quality ---");
+    // Simulated ACK for testing (replace with real when gateway ready)
     LoRaLinkData link;
-    link.rssi = -78;           // Good simulated signal
-    link.snr  = 9.5;
-    link.packetSize = 48;
-    link.crcValid = true;
-    link.ackReceived = true;
-    link.mode = txMode;
+    link.rssi = -78; link.snr = 9.5; link.packetSize = 48;
+    link.crcValid = true; link.ackReceived = true; link.mode = txMode;
 
-    float pdr = 98.5;
-    float packetLoss = 1.5;
-    float crcScore = 100.0;
+    float pdr = 98.5; float loss = 1.5; float crcScore = 100.0;
 
-    // Step 4: Calculate 7-Factor LQI
-    Serial.println("--- Step 4: 7-Factor LQI Calculation ---");
-    float lqi = calculateLQI(link.rssi, link.snr, pdr, packetLoss,
-                             link.packetSize, crcScore, txInterval);
-
+    float lqi = calculateLQI(link.rssi, link.snr, pdr, loss, link.packetSize, crcScore, txInterval);
     storeLQI(lqi);
     String trend = predictTrend();
 
-    printLQIDetails(link.rssi, link.snr, pdr, packetLoss,
-                    link.packetSize, crcScore, lqi, trend);
+    printLQIDetails(link.rssi, link.snr, pdr, loss, link.packetSize, crcScore, lqi, trend);
 
-    // Step 5: Decide Mode (Proactive Switching)
-    Serial.println("--- Step 5: Mode Decision ---");
-    String newMode = decideMode(lqi, trend);   // You can use the decideMode function from earlier full code
+    String newMode = decideMode(lqi, trend);
     if (newMode != txMode) {
         txMode = newMode;
         txInterval = (txMode == "FAST") ? TX_INTERVAL_FAST : TX_INTERVAL_SAFE;
         setLoRaMode(txMode);
-        Serial.print(">>> Switched to "); Serial.println(txMode);
+        Serial.println(">>> Mode switched to " + txMode);
     }
 
-    // Update LEDs
     if (txMode == "FAST") showFastMode(); else showSafeMode();
 
-    // Update OLED (Alternate screens)
     if (showSensors) {
-        displaySensorData(dhtData.temperature, dhtData.humidity,
-                          acsData.current, mpuData.vibration);
+        displaySensorData(dhtData.temperature, dhtData.humidity, acsData.current, mpuData.vibration);
     } else {
         displayLinkQuality(link.rssi, link.snr, lqi, pdr, txMode);
     }
     showSensors = !showSensors;
-
-    // Summary
-    Serial.println("\n=== SENSOR NODE SUMMARY ===");
-    Serial.print("Telemetry Packet Built → ");
-    Serial.print(NODE_ID); Serial.print(",");
-    Serial.print(millis()); Serial.print(",");
-    Serial.print(dhtData.temperature,1); Serial.print(",");
-    Serial.print(dhtData.humidity,1); Serial.print(",");
-    Serial.print(acsData.current,2); Serial.print(",");
-    Serial.print(mpuData.vibration,3); Serial.print(",");
-    Serial.print((txMode=="FAST") ? "0" : "1"); Serial.print(",");
-    Serial.print(packetCount); Serial.println(",[CRC]");
-    Serial.print("LQI Score: "); Serial.println(lqi, 2);
-    Serial.print("Trend:     "); Serial.println(trend);
-    Serial.print("Current Mode: "); Serial.println(txMode);
-    Serial.println("===========================\n");
 
     delay(txInterval);
 }

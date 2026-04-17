@@ -1,6 +1,6 @@
 // ============================================
 // ALERT-LoRa Sensor Node
-// Ra-02 SX1278 LoRa Module
+// Ra-02 SX1278 LoRa Module + HH:MM:SS Timestamp
 // CINEC Campus — BSc ETE 2026
 // ============================================
 
@@ -27,7 +27,6 @@ struct LoRaLinkData {
 
 // Global counters
 int totalSent     = 0;
-int totalReceived = 0;
 
 // ============================================
 // INITIALIZE LORA
@@ -66,17 +65,27 @@ void setLoRaMode(String mode) {
 }
 
 // ============================================
-// SEND TELEMETRY PACKET (with CRC-16)
+// SEND TELEMETRY PACKET with HH:MM:SS Timestamp
 // ============================================
 bool sendTelemetryPacket(float temperature, float humidity, float current,
                          float vibration, String mode, int packetCount) {
 
     totalSent++;
 
+    // Generate HH:MM:SS from millis()
+    unsigned long totalSeconds = millis() / 1000;
+    int hours   = (totalSeconds / 3600) % 24;
+    int minutes = (totalSeconds / 60) % 60;
+    int seconds = totalSeconds % 60;
+
+    char timeStr[9];
+    sprintf(timeStr, "%02d:%02d:%02d", hours, minutes, seconds);
+
+    // Build packet exactly as requested
     String packet = "";
     packet += NODE_ID;
     packet += ",";
-    packet += String(millis());
+    packet += timeStr;                    // ← 10:45:23
     packet += ",";
     packet += String(temperature, 1);
     packet += ",";
@@ -104,10 +113,10 @@ bool sendTelemetryPacket(float temperature, float humidity, float current,
     LoRa.print(packet);
     bool result = LoRa.endPacket();
 
-    Serial.println("--- TX Packet ---");
+    Serial.println("--- TX Telemetry Packet ---");
     Serial.println(packet);
     Serial.print("CRC: 0x"); Serial.println(crc, HEX);
-    Serial.println(result ? "Sent OK ✅" : "Send FAIL ❌");
+    Serial.println(result ? "Packet Sent Successfully ✅" : "Send Failed ❌");
 
     return result;
 }
