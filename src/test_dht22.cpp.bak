@@ -1,0 +1,29 @@
+// ALERT-LoRa: Individual Test - DHT22
+#include <Arduino.h>
+#include <DHT.h>
+#include "config.h"
+
+DHT dht(DHT_PIN, DHT_TYPE);
+
+void setup() {
+  Serial.begin(115200);
+  delay(1000);
+  Serial.println("ALERT-LoRa DHT22 Test Starting...");
+  dht.begin();
+  delay(2000);
+  Serial.println("DHT22 initialized ✅");
+}
+
+void loop() {
+  float temp = dht.readTemperature();
+  float hum  = dht.readHumidity();
+
+  Serial.println("--- DHT22 Reading ---");
+  if (isnan(temp) || isnan(hum)) {
+    Serial.println("DHT22 read FAILED ❌ - Check wiring");
+  } else {
+    Serial.print("Temperature: "); Serial.print(temp, 1); Serial.println(" °C");
+    Serial.print("Humidity:    "); Serial.print(hum, 1);  Serial.println(" %");
+  }
+  delay(3000);
+}

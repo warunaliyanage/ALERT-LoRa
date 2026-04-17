@@ -1,0 +1,28 @@
+// ALERT-LoRa: Individual Test - ACS712
+#include <Arduino.h>
+#include "config.h"
+
+void setup() {
+  Serial.begin(115200);
+  delay(1000);
+  Serial.println("ALERT-LoRa ACS712 Test Starting...");
+  analogReadResolution(12);
+  analogSetAttenuation(ADC_11db);
+  Serial.println("ACS712 initialized ✅");
+}
+
+void loop() {
+  float sum = 0;
+  for (int i = 0; i < 100; i++) {
+    sum += analogRead(ACS712_PIN);
+    delay(1);
+  }
+  float avgADC = sum / 100.0;
+  float voltage = (avgADC / 4095.0) * 3.3;
+  float current = (voltage - ACS712_ZERO_VOLTAGE) / ACS712_SENSITIVITY;
+
+  Serial.println("--- ACS712 Reading ---");
+  Serial.print("Voltage: "); Serial.print(voltage, 3); Serial.println(" V");
+  Serial.print("Current: "); Serial.print(current, 3); Serial.println(" A");
+  delay(2000);
+}

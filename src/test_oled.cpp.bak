@@ -1,0 +1,50 @@
+// ALERT-LoRa: Individual Test - OLED Display ONLY
+#include <Arduino.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include "config.h"          // ← Important
+
+Adafruit_SSD1306 display(OLED_WIDTH, OLED_HEIGHT, &Wire, -1);
+
+void setup() {
+  Serial.begin(115200);
+  delay(1000);
+  Serial.println("\n==========================================");
+  Serial.println("ALERT-LoRa OLED Individual Test");
+  Serial.println("CINEC Campus - BSc ETE 2026");
+  Serial.println("==========================================\n");
+
+  Wire.begin(I2C_SDA, I2C_SCL);
+
+  if (!display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDRESS)) {
+    Serial.println("OLED FAILED ❌ - Check wiring or I2C address 0x3C");
+    while (true) delay(100);
+  }
+
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+  display.println("ALERT-LoRa");
+  display.println("OLED Test OK");
+  display.println("Node: " + String(NODE_ID));
+  display.println("CINEC Campus");
+  display.display();
+
+  Serial.println("OLED initialized ✅");
+  Serial.println("Display should show text now.");
+}
+
+void loop() {
+  display.clearDisplay();
+  display.setCursor(0, 0);
+  display.println("ALERT-LoRa Sensor");
+  display.print("Running Time: ");
+  display.print(millis() / 1000);
+  display.println(" s");
+  display.println("Individual OLED Test");
+  display.println("Ready for next test");
+  display.display();
+  delay(2000);
+}

@@ -1,0 +1,43 @@
+// ALERT-LoRa: Individual Test - LoRa TX (Ra-02)
+#include <Arduino.h>
+#include <SPI.h>
+#include <LoRa.h>
+#include "config.h"
+
+int counter = 0;
+
+void setup() {
+  Serial.begin(115200);
+  delay(1000);
+  Serial.println("ALERT-LoRa LoRa TX Test Starting...");
+
+  SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_NSS);
+  LoRa.setPins(LORA_NSS, LORA_RST, LORA_DIO0);
+
+  if (!LoRa.begin(LORA_FREQUENCY)) {
+    Serial.println("Ra-02 FAILED ❌ - Check wiring / power");
+    while(true) delay(100);
+  }
+
+  LoRa.setSpreadingFactor(LORA_SF_FAST);
+  LoRa.setSignalBandwidth(LORA_BANDWIDTH);
+  LoRa.setCodingRate4(LORA_CODING_RATE);
+  LoRa.setTxPower(LORA_TX_POWER);
+  LoRa.enableCrc();
+
+  Serial.println("Ra-02 initialized ✅ - Transmitting test packets");
+}
+
+void loop() {
+  Serial.print("Sending packet #"); Serial.println(counter);
+
+  LoRa.beginPacket();
+  LoRa.print("ALERT-LoRa Test Packet #");
+  LoRa.print(counter);
+  LoRa.print(" | Node: "); LoRa.print(NODE_ID);
+  LoRa.endPacket();
+
+  Serial.println("Packet sent ✅");
+  counter++;
+  delay(5000);   // Send every 5 seconds
+}

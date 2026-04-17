@@ -1,0 +1,44 @@
+// ALERT-LoRa: Individual Test - MPU6050
+#include <Arduino.h>
+#include <Wire.h>
+#include <MPU6050.h>
+#include "config.h"
+
+MPU6050 mpu;
+
+void setup() {
+  Serial.begin(115200);
+  delay(1000);
+  Serial.println("ALERT-LoRa MPU6050 Test Starting...");
+
+  Wire.begin(I2C_SDA, I2C_SCL);
+  mpu.initialize();
+
+  if (!mpu.testConnection()) {
+    Serial.println("MPU6050 FAILED ❌ - Check I2C wiring");
+    while(true) delay(100);
+  }
+  Serial.println("MPU6050 initialized ✅");
+}
+
+void loop() {
+  int16_t ax, ay, az, gx, gy, gz;
+  mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+
+  float accelX = ax / 16384.0;
+  float accelY = ay / 16384.0;
+  float accelZ = az / 16384.0;
+  float gyroX  = gx / 131.0;
+  float gyroY  = gy / 131.0;
+  float gyroZ  = gz / 131.0;
+
+  float vibration = sqrt(accelX*accelX + accelY*accelY + accelZ*accelZ);
+
+  Serial.println("--- MPU6050 Reading ---");
+  Serial.print("Accel X/Y/Z: "); Serial.print(accelX,3); Serial.print(" / ");
+  Serial.print(accelY,3); Serial.print(" / "); Serial.println(accelZ,3);
+  Serial.print("Gyro  X/Y/Z: "); Serial.print(gyroX,2); Serial.print(" / ");
+  Serial.print(gyroY,2); Serial.print(" / "); Serial.println(gyroZ,2);
+  Serial.print("Vibration:   "); Serial.print(vibration,3); Serial.println(" g");
+  delay(2000);
+}
