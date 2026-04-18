@@ -1,7 +1,7 @@
 // ============================================
-// ALERT-LoRa Sensor Node – FINAL VERSION
-// Timestamp: HH:MM:SS | Full Sensors + LQI + Adaptive Mode
-// CINEC Campus — BSc ETE 2026
+// ALERT-LoRa Sensor Node – FINAL COMPLETE VERSION
+// Real ACK + Real PDR + 7-Factor LQI + Adaptive Mode
+// Timestamp: HH:MM:SS | CINEC Campus — BSc ETE 2026
 // ============================================
 
 #include <Arduino.h>
@@ -14,13 +14,18 @@
 #include "lora_module.h"
 #include "crc16.h"
 
-// Globals
+// ====================== GLOBAL VARIABLES ======================
 String  txMode        = "FAST";
 int     txInterval    = TX_INTERVAL_FAST;
 float   lqiHistory[LQI_HISTORY_SIZE];
 int     lqiCount      = 0;
 int     packetCount   = 0;
 bool    showSensors   = true;
+
+// Globals used by lora_module.h
+int totalSent     = 0;
+int totalReceived = 0;
+// ============================================================
 
 float calculateLQI(int rssi, float snr, float pdr, float packetLoss,
                    int packetSize, float crcScore, int txIntervalMs) {
@@ -68,6 +73,7 @@ void printLQIDetails(int rssi, float snr, float pdr, float loss, int size, float
     Serial.print("Intv: "); Serial.println(txInterval);
     Serial.print("LQI:  "); Serial.println(lqi,2);
     Serial.print("Trend:"); Serial.println(trend);
+    Serial.println("=====================");
 }
 
 void setup() {
@@ -98,7 +104,7 @@ void setup() {
 
     setGreenLED(true);
     Serial.println("ALL COMPONENTS READY ✅");
-    Serial.println("Packet Format: NODE,TIME,TEMP,HUM,CUR,VIB,MODE,COUNT,CRC");
+    Serial.println("Real bidirectional ACK + 7-Factor LQI Active");
     delay(1500);
 }
 
@@ -115,12 +121,13 @@ void loop() {
     bool sent = sendTelemetryPacket(dhtData.temperature, dhtData.humidity,
                                     acsData.current, mpuData.vibration, txMode, packetCount);
 
-    // Simulated ACK for testing (replace with real when gateway ready)
-    LoRaLinkData link;
-    link.rssi = -78; link.snr = 9.5; link.packetSize = 48;
-    link.crcValid = true; link.ackReceived = true; link.mode = txMode;
+    // Wait for REAL ACK from Gateway
+    LoRaLinkData link = waitForACK(ACK_TIMEOUT);
 
-    float pdr = 98.5; float loss = 1.5; float crcScore = 100.0;
+    // Real PDR and Loss calculation
+    float pdr = (totalSent > 0) ? ((float)totalReceived / totalSent * 100.0) : 100.0;
+    float loss = 100.0 - pdr;
+    float crcScore = 100.0;
 
     float lqi = calculateLQI(link.rssi, link.snr, pdr, loss, link.packetSize, crcScore, txInterval);
     storeLQI(lqi);

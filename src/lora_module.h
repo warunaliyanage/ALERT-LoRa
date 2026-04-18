@@ -1,6 +1,7 @@
 // ============================================
 // ALERT-LoRa Sensor Node
-// Ra-02 SX1278 LoRa Module + HH:MM:SS Timestamp
+// Ra-02 SX1278 LoRa Module + Real ACK Support
+// HH:MM:SS Timestamp + CRC-16
 // CINEC Campus — BSc ETE 2026
 // ============================================
 
@@ -25,8 +26,12 @@ struct LoRaLinkData {
     String mode;
 };
 
-// Global counters
-int totalSent     = 0;
+// ============================================
+// GLOBAL COUNTERS (Declared here, defined in main.cpp)
+// ============================================
+extern int totalSent;
+extern int totalReceived;
+extern String txMode;     // Current transmission mode
 
 // ============================================
 // INITIALIZE LORA
@@ -52,9 +57,10 @@ bool initLoRa() {
 }
 
 // ============================================
-// SET LORA MODE
+// SET LORA MODE (FAST / SAFE)
 // ============================================
 void setLoRaMode(String mode) {
+    txMode = mode;
     if (mode == "FAST") {
         LoRa.setSpreadingFactor(LORA_SF_FAST);
         Serial.println("Mode: FAST (SF7)");
@@ -81,11 +87,11 @@ bool sendTelemetryPacket(float temperature, float humidity, float current,
     char timeStr[9];
     sprintf(timeStr, "%02d:%02d:%02d", hours, minutes, seconds);
 
-    // Build packet exactly as requested
+    // Build packet
     String packet = "";
     packet += NODE_ID;
     packet += ",";
-    packet += timeStr;                    // ← 10:45:23
+    packet += timeStr;
     packet += ",";
     packet += String(temperature, 1);
     packet += ",";
@@ -119,6 +125,66 @@ bool sendTelemetryPacket(float temperature, float humidity, float current,
     Serial.println(result ? "Packet Sent Successfully ✅" : "Send Failed ❌");
 
     return result;
+}
+
+// ============================================
+// WAIT FOR REAL ACK FROM GATEWAY
+// ============================================
+LoRaLinkData waitForACK(int timeoutMs) {
+    LoRaLinkData link;
+    link.rssi = -120;
+    link.snr = -20;
+    link.packetSize = 0;
+    link.crcValid = false;
+    link.ackReceived = false;
+    link.mode = txMode;
+
+    unsigned long start = millis();
+
+    while (millis() - start < timeoutMs) {
+        int pktSize = LoRa.parsePacket();
+        if (pktSize > 0) {
+            totalReceived++;
+
+            String response = "";
+            while (LoRa.available()) {
+                response += (char)LoRa.read();
+            }
+
+            link.rssi = LoRa.packetRssi();
+            link.snr  = LoRa.packetSnr();
+            link.packetSize = pktSize;
+            link.crcValid = true;
+            link.ackReceived = true;
+
+            if (response.startsWith("ACK")) {
+                int first = response.indexOf(',');
+                int second = response.indexOf(',', first + 1);
+                int third = response.indexOf(',', second + 1);
+
+                if (third > 0) {
+                    String modeStr = response.substring(second + 1, third);
+                    link.mode = modeStr;
+                }
+
+                Serial.println("Real ACK received from Gateway ✅");
+                Serial.print("RSSI from Gateway: "); Serial.print(link.rssi); Serial.println(" dBm");
+                Serial.print("SNR from Gateway:  "); Serial.print(link.snr, 1); Serial.println(" dB");
+                Serial.print("Mode Command: "); Serial.println(link.mode);
+            } 
+            else if (response.startsWith("NACK")) {
+                Serial.println("NACK received - Link problem");
+                link.rssi = -110;
+            }
+
+            return link;
+        }
+    }
+
+    Serial.println("ACK Timeout - No response from Gateway ❌");
+    link.rssi = -115;
+    link.snr = -12;
+    return link;
 }
 
 #endif
